@@ -6,6 +6,7 @@ import numpy as np
 import pickle
 from ast import literal_eval
 
+from umap import UMAP
 from pdb import set_trace as st
 import string
 import re
@@ -17,6 +18,8 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 stop_words = stopwords.words('english')
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, HashingVectorizer
+from sentence_transformers import SentenceTransformer
+from bertopic import BERTopic
 
 def _get_stopwords():
     print('getting stopwords')
@@ -110,3 +113,32 @@ def clean_text(text, stop_words = stop_words):
         text = ' '.join(words).strip()
 
         return text
+
+def get_bert_topics(data, seed):
+    #sentence_model = SentenceTransformer("paraphrase-mpnet-base-v2") 
+    umap_model = UMAP(random_state=seed)
+
+    topic_model = BERTopic(
+    #                       embedding_model = sentence_model,
+                           umap_model = umap_model,
+                           min_topic_size = 10,
+                           vectorizer_model = CountVectorizer(max_df = 0.5,
+                                                              min_df = 0.001,
+                                                              ngram_range = (1,4))
+                          )
+
+    topics, probs = topic_model.fit_transform(data)
+    frequency = topic_model.get_topic_freq()
+    print(f'topics: {len(frequency["Topic"])}')
+    
+    # can't use "-1 in frequency['Topic']". idk why but it just doesn't work.
+    if len(frequency[frequency['Topic'] == -1]) > 0: 
+        num_rows_with_no_topic = frequency['Count'][frequency['Topic'] == -1].values[0]
+        pct_rows_with_no_topic = round(num_rows_with_no_topic/len(data)*100,1)
+        print('Number of question rows with no topic: ', num_rows_with_no_topic,
+              ' (', pct_rows_with_no_topic, '%)',
+              sep = '')
+    else:
+        print('all questions were successfully assigned to a topic')
+
+    return topic_model, frequency, topics, probs

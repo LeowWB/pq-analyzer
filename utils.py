@@ -131,30 +131,28 @@ def _get_topics_from_model(topic_model, data):
 
     return topic_model, frequency, topics, probs
 
-def get_bert_topics(data, seed):
+def get_bert_topics(data, seed, anchors=None):
     #sentence_model = SentenceTransformer("paraphrase-mpnet-base-v2") 
     umap_model = UMAP(random_state=seed)
 
-    topic_model = BERTopic(
-    #                       embedding_model = sentence_model,
-                           umap_model = umap_model,
-                           min_topic_size = 10,
-                           vectorizer_model = CountVectorizer(max_df = 0.5,
-                                                              min_df = 0.001,
-                                                              ngram_range = (1,4))
-                          )
-    
-    return _get_topics_from_model(topic_model, data)
+    if anchors:
+        topic_model = BERTopic(
+        # embedding_model = sentence_model,
+            min_topic_size = 10,
+            seed_topic_list = anchors,
+            umap_model = umap_model,
+            vectorizer_model = CountVectorizer(max_df = 0.5,
+                                               min_df = 0.001,
+                                               ngram_range = (1,4))
+        )
+    else:
+        topic_model = BERTopic(
+        # embedding_model = sentence_model,
+            min_topic_size = 10,
+            umap_model = umap_model,
+            vectorizer_model = CountVectorizer(max_df = 0.5,
+                                               min_df = 0.001,
+                                               ngram_range = (1,4))
+        )
 
-def get_bert_topics_anchor(data, anchors):
-    # Defining the topic model
-    topic_model = BERTopic(
-                        # embedding_model = sentence_model,
-                           min_topic_size = 10,
-                           seed_topic_list = anchors,
-                           vectorizer_model = CountVectorizer(max_df = 0.5,
-                                                              min_df = 0.001,
-                                                              ngram_range = (1,4))
-                          )
-    
     return _get_topics_from_model(topic_model, data)

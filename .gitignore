@@ -1,4 +1,7 @@
+__pycache__/*
+*.html
 *.csv
 env/*
 .ipynb_checkpoints/*
 *.pkl
+*~
